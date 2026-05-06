@@ -1,7 +1,6 @@
 {
   "buildCommand": "pnpm run build",
   "outputDirectory": "dist",
-  "envPrefix": "VITE_",
   "routes": [
     { "src": "/(.*)", "dest": "/index.html" }
   ]
