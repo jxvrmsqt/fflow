@@ -267,7 +267,7 @@ const App: React.FC = () => {
     <div className="min-h-screen flex flex-col md:flex-row font-sans text-slate-800">
       <nav className="w-full md:w-[280px] bg-white flex flex-col md:fixed h-full z-20 border-r border-gray-100">
         <div className="p-10 flex items-center gap-3">
-          <img src="/logo.png" alt="FinanFlow" className="w-12 h-12 rounded-xl shadow-lg" />
+          <img src="/logo.svg" alt="FinanFlow" className="w-12 h-12 rounded-xl shadow-lg" />
           <h1 className="text-2xl font-black tracking-tight text-finanflow-primary">FinanFlow</h1>
         </div>
         <div className="px-10 mb-8 flex items-center gap-3">

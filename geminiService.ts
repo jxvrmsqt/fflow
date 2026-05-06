@@ -27,11 +27,10 @@ export const getFinancialAdvice = async (state: FinancialState): Promise<string>
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-2.0-flash',
       contents: prompt,
       config: {
         temperature: 0.7,
-        thinkingConfig: { thinkingBudget: 0 }
       }
     });
     return response.text || "Não foi possível gerar conselhos no momento.";
