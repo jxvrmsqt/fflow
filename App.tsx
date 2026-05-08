@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { initialData } from './mockData';
 import { FinancialState, Debt, HistoryPoint, AppSettings, FixedExpense, UserProfile, Income } from './types';
-import Card from './components/Card.tsx';
+import ImportModal from './ImportModal.tsx';
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   Cell, PieChart, Pie, Legend, LineChart, Line, BarChart, Bar, AreaChart, Area, ComposedChart
@@ -14,7 +14,7 @@ import {
   CheckCircle, ChevronRight, AlertTriangle, Edit3, ArrowRight,
   Plus, Smile, ShoppingBag, Clock, Calculator, BrainCircuit, Layers, BarChart3,
   CreditCard, TrendingUp, Bell, Trash2, ShieldAlert, Award, Flame, AlertOctagon,
-  LifeBuoy, HeartHandshake, Sunrise, UserPlus, Users, Mail, LogOut, PartyPopper, Trophy, Cloud
+  LifeBuoy, HeartHandshake, Sunrise, UserPlus, Users, Mail, LogOut, PartyPopper, Trophy, Cloud, Upload
 } from 'lucide-react';
 import { getFinancialAdvice } from './geminiService';
 import { fetchSheetData, saveSheetData } from './sheetsService';
@@ -105,7 +105,8 @@ const App: React.FC = () => {
   const [showCrisisModal, setShowCrisisModal] = useState(false);
   const [selectedCrisisDebtId, setSelectedCrisisDebtId] = useState<string>('');
   const [simulationAmount, setSimulationAmount] = useState<string>('');
-  const [simulationResult, setSimulationResult] = useState<any[] | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importType, setImportType] = useState<'debts' | 'expenses' | 'incomes'>('debts');
 
   const isSecondOfDay = useMemo(() => new Date().getDate() === 2, []);
 
@@ -159,7 +160,17 @@ const App: React.FC = () => {
     setCurrentUser(mainUser); setData(newData); setOnboarding(prev => ({ ...prev, step: 'COMPLETED' }));
   };
 
-  const handleLogout = () => { localStorage.removeItem('finanflow_user'); setCurrentUser(null); setOnboarding({ step: 'LOGIN', tempName: '', tempIncome: '', tempFamilyMember: { email: '', name: '', income: '' } }); };
+  const handleImport = (result: any) => {
+    if (result.success) {
+      const newData = { ...data };
+      if (result.debts.length > 0) newData.debts = [...newData.debts, ...result.debts];
+      if (result.expenses.length > 0) newData.fixedExpenses = [...newData.fixedExpenses, ...result.expenses];
+      if (result.incomes.length > 0) newData.incomes = [...newData.incomes, ...result.incomes];
+      setData(newData);
+      setShowCelebration({ visible: true, message: `Importação concluída! ${result.debts.length + result.expenses.length + result.incomes.length} itens importados com sucesso.` });
+    }
+    setShowImportModal(false);
+  };
 
   const calculateSmartPriorityScore = (isAgreement: boolean, interestRate: number, monthlyInstallment: number) => {
     let score = 0; if (isAgreement) score += 1000; score += interestRate * 20; score += monthlyInstallment * 0.05; return Math.round(score);
@@ -349,8 +360,29 @@ const App: React.FC = () => {
                         <button onClick={handleSync} className="bg-black text-white px-10 py-5 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-95 transition-all shadow-lg"><RefreshCw size={20} className={isSyncing ? "animate-spin" : ""} /> Sincronizar Agora</button>
                     </div>
                 </Card>
+                <Card title="Importar Dados" icon={<Upload size={24}/>} className="bg-white">
+                    <p className="text-gray-500 mb-6 font-medium">Importe seus dados existentes de planilhas Excel ou arquivos CSV para começar rapidamente.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button onClick={() => { setImportType('debts'); setShowImportModal(true); }} className="bg-blue-500 text-white py-4 px-6 rounded-2xl font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+                            <Upload size={18} /> Importar Dívidas
+                        </button>
+                        <button onClick={() => { setImportType('expenses'); setShowImportModal(true); }} className="bg-green-500 text-white py-4 px-6 rounded-2xl font-bold hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
+                            <Upload size={18} /> Importar Despesas
+                        </button>
+                        <button onClick={() => { setImportType('incomes'); setShowImportModal(true); }} className="bg-purple-500 text-white py-4 px-6 rounded-2xl font-bold hover:bg-purple-600 transition-colors flex items-center justify-center gap-2">
+                            <Upload size={18} /> Importar Receitas
+                        </button>
+                    </div>
+                </Card>
             </div>
         )}
+
+        <ImportModal
+          isOpen={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImport={handleImport}
+          importType={importType}
+        />
       </main>
     </div>
   );
